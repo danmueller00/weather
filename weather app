@@ -1,0 +1,45 @@
+import streamlit as st
+import requests
+from datetime import datetime
+
+# Replace with your actual WeatherAPI key
+api_key = "Your API Key"
+base_url = "http://api.weatherapi.com/v1/forecast.json"
+
+# Streamlit dashboard setup
+st.title("Weather Dashboard with Alerts")
+city = st.text_input("Enter city name", "New York")
+
+# Optional: Allow user to specify forecast days, which must be at least 1 to get alerts
+forecast_days = 1
+
+if st.button("Get Weather with Alerts"):
+    url = f"{base_url}?key={api_key}&q={city}&days={forecast_days}&alerts=yes"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        
+        # Display basic weather info in Fahrenheit
+        st.write("City:", data["location"]["name"])
+        st.write("Country:", data["location"]["country"])
+        st.write("Temperature (°F):", data["current"]["temp_f"])
+        st.write("Condition:", data["current"]["condition"]["text"])
+        st.image("https:" + data["current"]["condition"]["icon"])
+
+        # Check for Alerts
+        if "alerts" in data and data["alerts"]["alert"]:
+            st.subheader("Weather Alerts")
+            for alert in data["alerts"]["alert"]:
+                # Display alert details with color-coding for severity
+                if alert["severity"].lower() == "severe":
+                    st.error(f"🚨 **{alert['headline']}**")
+                elif alert["severity"].lower() == "moderate":
+                    st.warning(f"⚠️ **{alert['headline']}**")
+                else:
+                    st.info(f"ℹ️ **{alert['headline']}**")
+
+                # Show additional alert information
+                st.write("Severity:", alert["severity"])
+                st.write("Description:", alert["desc"])
+               
